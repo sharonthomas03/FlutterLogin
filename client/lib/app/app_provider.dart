@@ -6,17 +6,15 @@ import '../features/auth/service/auth_service.dart';
 import '../features/auth/viewmodel/auth_view_model.dart';
 import '../features/profile/service/profile_service.dart';
 import '../features/profile/viewmodel/profile_viewmodel.dart';
+import 'theme_notifier.dart';
 
 class AppProvider {
   static List<SingleChildWidget> get providers {
     return [
       // Core services
-      Provider<ApiClient>(
-        create: (_) => ApiClient(),
-      ),
-      Provider<LocalStorageService>(
-        create: (_) => LocalStorageService(),
-      ),
+      Provider<ApiClient>(create: (_) => ApiClient()),
+      Provider<LocalStorageService>(create: (_) => LocalStorageService()),
+      ChangeNotifierProvider<ThemeNotifier>(create: (_) => ThemeNotifier()),
 
       // Feature services dependency on core services
       ProxyProvider2<ApiClient, LocalStorageService, AuthService>(
@@ -34,20 +32,16 @@ class AppProvider {
 
       // ViewModels dependency on services
       ChangeNotifierProxyProvider<AuthService, AuthViewModel>(
-        create: (context) => AuthViewModel(
-          authService: context.read<AuthService>(),
-        ),
-        update: (_, authService, previous) => previous ?? AuthViewModel(
-          authService: authService,
-        ),
+        create: (context) =>
+            AuthViewModel(authService: context.read<AuthService>()),
+        update: (_, authService, previous) =>
+            previous ?? AuthViewModel(authService: authService),
       ),
       ChangeNotifierProxyProvider<ProfileService, ProfileViewModel>(
-        create: (context) => ProfileViewModel(
-          profileService: context.read<ProfileService>(),
-        ),
-        update: (_, profileService, previous) => previous ?? ProfileViewModel(
-          profileService: profileService,
-        ),
+        create: (context) =>
+            ProfileViewModel(profileService: context.read<ProfileService>()),
+        update: (_, profileService, previous) =>
+            previous ?? ProfileViewModel(profileService: profileService),
       ),
     ];
   }
