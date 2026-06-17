@@ -8,6 +8,11 @@ class AuthTextField extends StatelessWidget {
   final int maxLines;
   final bool alignLabelWithHint;
 
+  // New optional parameters — existing usages are unaffected.
+  final String? Function(String?)? validator;
+  final Widget? suffixIcon;
+  final TextInputAction? textInputAction;
+
   const AuthTextField({
     super.key,
     required this.controller,
@@ -16,19 +21,25 @@ class AuthTextField extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.maxLines = 1,
     this.alignLabelWithHint = false,
+    this.validator,
+    this.suffixIcon,
+    this.textInputAction,
   });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
+    return TextFormField(
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
       maxLines: maxLines,
+      textInputAction: textInputAction,
+      validator: validator,
       decoration: InputDecoration(
         labelText: labelText,
         alignLabelWithHint: alignLabelWithHint,
         border: const OutlineInputBorder(),
+        suffixIcon: suffixIcon,
       ),
     );
   }
