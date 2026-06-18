@@ -8,6 +8,7 @@ const buildAuthResponse = (user) => ({
   username: user.username,
   email: user.email,
   bio: user.bio || "",
+  role: user.role,
 });
 
 // @route   POST api/auth/register
