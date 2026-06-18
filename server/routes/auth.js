@@ -46,7 +46,7 @@ router.post("/register", async (req, res) => {
 
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET || "super_secret_key_change_me_in_production",
       { expiresIn: "24h" }
     );
@@ -85,9 +85,14 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    // Check if account is blocked
+    if (user.isBlocked) {
+      return res.status(403).json({ message: "Your account has been blocked by admin" });
+    }
+
     // Create JWT token
     const token = jwt.sign(
-      { id: user._id },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET || "super_secret_key_change_me_in_production",
       { expiresIn: "24h" }
     );

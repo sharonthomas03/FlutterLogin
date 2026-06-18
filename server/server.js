@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 
 const authRoutes = require("./routes/auth");
 const profileRoutes = require("./routes/profile");
+const postRoutes = require("./routes/posts");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 
@@ -12,9 +14,14 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// Serve uploaded images statically
+app.use("/uploads", express.static("uploads"));
+
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/posts", postRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.get("/", (req, res) => {
   res.send("API is running");
