@@ -8,6 +8,10 @@ class ProfileInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final roleValue = user.role.isNotEmpty
+        ? '${user.role[0].toUpperCase()}${user.role.substring(1)}'
+        : 'User';
+
     return Column(
       children: [
         _ProfileDetailTile(
@@ -22,6 +26,12 @@ class ProfileInfoCard extends StatelessWidget {
           value: user.bio.isEmpty
               ? 'Flutter developer building clean and modern experiences.'
               : user.bio,
+        ),
+        const SizedBox(height: 16),
+        _ProfileDetailTile(
+          icon: Icons.admin_panel_settings_outlined,
+          label: 'Role',
+          value: roleValue,
         ),
       ],
     );

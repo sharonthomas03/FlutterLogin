@@ -6,6 +6,8 @@ import '../features/auth/service/auth_service.dart';
 import '../features/auth/viewmodel/auth_view_model.dart';
 import '../features/profile/service/profile_service.dart';
 import '../features/profile/viewmodel/profile_viewmodel.dart';
+import '../features/post/service/post_service.dart';
+import '../features/post/viewmodel/post_viewmodel.dart';
 import 'theme_notifier.dart';
 
 class AppProvider {
@@ -29,6 +31,11 @@ class AppProvider {
           localStorageService: localStorage,
         ),
       ),
+      ProxyProvider<ApiClient, PostService>(
+        update: (_, apiClient, _) => PostService(
+          apiClient: apiClient,
+        ),
+      ),
 
       // ViewModels dependency on services
       ChangeNotifierProxyProvider<AuthService, AuthViewModel>(
@@ -42,6 +49,12 @@ class AppProvider {
             ProfileViewModel(profileService: context.read<ProfileService>()),
         update: (_, profileService, previous) =>
             previous ?? ProfileViewModel(profileService: profileService),
+      ),
+      ChangeNotifierProxyProvider<PostService, PostViewModel>(
+        create: (context) =>
+            PostViewModel(postService: context.read<PostService>()),
+        update: (_, postService, previous) =>
+            previous ?? PostViewModel(postService: postService),
       ),
     ];
   }

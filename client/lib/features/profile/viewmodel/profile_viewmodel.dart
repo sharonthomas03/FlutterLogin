@@ -41,6 +41,7 @@ class ProfileViewModel extends ChangeNotifier {
       final updatedUser = await profileService.updateProfile(
         token: user.token,
         request: request,
+        role: user.role,
       );
       return updatedUser;
     } catch (e) {

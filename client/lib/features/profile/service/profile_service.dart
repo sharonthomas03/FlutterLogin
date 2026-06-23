@@ -16,6 +16,7 @@ class ProfileService {
   Future<User> updateProfile({
     required String token,
     required UpdateProfileRequestModel request,
+    required String role,
   }) async {
     final response = await apiClient.put(
       ApiEndpoints.profile,
@@ -26,6 +27,7 @@ class ProfileService {
     final updatedUser = User.fromStoredJson({
       ...response['user'] as Map<String, dynamic>,
       'token': token,
+      'role': role,
     });
 
     await localStorageService.saveUserJson(updatedUser.toJson());

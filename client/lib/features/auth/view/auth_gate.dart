@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../model/user_model.dart';
 import '../viewmodel/auth_view_model.dart';
 import 'login_view.dart';
-import '../../profile/view/profile_view.dart';
+import '../../post/view/main_navigation_shell.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -37,7 +37,7 @@ class _AuthGateState extends State<AuthGate> {
           return const LoginView();
         }
 
-        return ProfileView(user: user);
+        return const MainNavigationView();
       },
     );
   }

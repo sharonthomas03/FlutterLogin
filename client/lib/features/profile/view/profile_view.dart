@@ -8,6 +8,8 @@ import '../../auth/view/login_view.dart';
 import '../viewmodel/profile_viewmodel.dart';
 import '../widget/profile_info_card.dart';
 import '../widget/edit_profile_dialog.dart';
+import '../../post/viewmodel/post_viewmodel.dart';
+import '../../post/widget/post_card.dart';
 
 class ProfileView extends StatefulWidget {
   final User user;
@@ -29,6 +31,9 @@ class _ProfileViewState extends State<ProfileView> {
   void initState() {
     super.initState();
     currentUser = widget.user;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<PostViewModel>().fetchMyPosts(currentUser.token);
+    });
   }
 
   @override
@@ -147,6 +152,8 @@ class _ProfileViewState extends State<ProfileView> {
     final titleColor = isDark ? Colors.white : const Color(0xFF14213D);
     final buttonForeground = isDark ? const Color(0xFF04111F) : Colors.white;
 
+    final postViewModel = context.watch<PostViewModel>();
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Profile"),
@@ -171,106 +178,169 @@ class _ProfileViewState extends State<ProfileView> {
           ),
         ),
         child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 460),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(32),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: cardGradient,
-                  ),
-                  border: Border.all(color: cardBorderColor),
-                  boxShadow: [
-                    BoxShadow(
-                      color: shadowColor,
-                      blurRadius: 30,
-                      offset: const Offset(0, 18),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 550),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+              child: Column(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(32),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: cardGradient,
+                      ),
+                      border: Border.all(color: cardBorderColor),
+                      boxShadow: [
+                        BoxShadow(
+                          color: shadowColor,
+                          blurRadius: 30,
+                          offset: const Offset(0, 18),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
-                        width: 108,
-                        height: 108,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [Color(0xFF60A5FA), Color(0xFF2DD4BF)],
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF60A5FA,
-                              ).withValues(alpha: 0.28),
-                              blurRadius: 22,
-                              offset: const Offset(0, 12),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(28, 32, 28, 28),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 108,
+                            height: 108,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              gradient: const LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [Color(0xFF60A5FA), Color(0xFF2DD4BF)],
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(
+                                    0xFF60A5FA,
+                                  ).withValues(alpha: 0.28),
+                                  blurRadius: 22,
+                                  offset: const Offset(0, 12),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          initials,
-                          style: TextStyle(
-                            color: isDark
-                                ? const Color(0xFF04111F)
-                                : Colors.white,
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Text(
-                        displayName,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: titleColor,
-                          fontSize: 28,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 28),
-                      ProfileInfoCard(user: currentUser),
-                      const SizedBox(height: 26),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton.icon(
-                          onPressed: showEditProfileDialog,
-                          icon: const Icon(Icons.edit_rounded),
-                          label: const Text("Edit Profile"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: colorScheme.primary,
-                            foregroundColor: buttonForeground,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
+                            alignment: Alignment.center,
+                            child: Text(
+                              initials,
+                              style: TextStyle(
+                                color: isDark
+                                    ? const Color(0xFF04111F)
+                                    : Colors.white,
+                                fontSize: 34,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.5,
+                              ),
                             ),
-                            textStyle: const TextStyle(
-                              fontSize: 16,
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            displayName,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: titleColor,
+                              fontSize: 28,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
+                          const SizedBox(height: 28),
+                          ProfileInfoCard(user: currentUser),
+                          const SizedBox(height: 26),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              onPressed: showEditProfileDialog,
+                              icon: const Icon(Icons.edit_rounded),
+                              label: const Text("Edit Profile"),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: colorScheme.primary,
+                                foregroundColor: buttonForeground,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                textStyle: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.only(left: 8.0),
+                      child: Text(
+                        "My Posts",
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 12),
+                  _buildMyPostsList(theme, postViewModel),
+                ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildMyPostsList(ThemeData theme, PostViewModel postViewModel) {
+    final myPosts = postViewModel.myPosts;
+    final isLoading = postViewModel.isLoading;
+
+    if (isLoading && myPosts.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 32),
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (myPosts.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 40),
+        child: Column(
+          children: [
+            Icon(
+              Icons.post_add_rounded,
+              size: 48,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              "No posts published yet",
+              style: TextStyle(
+                color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: myPosts.length,
+      itemBuilder: (context, index) {
+        return PostCard(post: myPosts[index]);
+      },
     );
   }
 }

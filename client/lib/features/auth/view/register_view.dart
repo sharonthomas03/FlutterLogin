@@ -6,7 +6,7 @@ import '../../../core/utils/input_validator.dart';
 import '../viewmodel/auth_view_model.dart';
 import '../widget/auth_text_field.dart';
 import '../widget/auth_button.dart';
-import '../../profile/view/profile_view.dart';
+import '../../post/view/main_navigation_shell.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -56,7 +56,7 @@ class _RegisterViewState extends State<RegisterView> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => ProfileView(user: user!)),
+        MaterialPageRoute(builder: (_) => const MainNavigationView()),
       );
     } catch (e) {
       if (!mounted) return;

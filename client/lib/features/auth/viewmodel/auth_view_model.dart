@@ -19,12 +19,16 @@ class AuthViewModel extends ChangeNotifier {
 
   void _setLoading(bool value) {
     _isLoading = value;
-    notifyListeners();
+    Future.microtask(() {
+      if (hasListeners) notifyListeners();
+    });
   }
 
   void _setError(String? message) {
     _errorMessage = message;
-    notifyListeners();
+    Future.microtask(() {
+      if (hasListeners) notifyListeners();
+    });
   }
 
   Future<User?> checkSavedUser() async {
