@@ -12,18 +12,19 @@ import {
   Lock,
   Unlock,
 } from "lucide-react";
+import type { AdminUser } from "@/types";
 
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   // Track which user IDs have an action in progress
-  const [actionLoading, setActionLoading] = useState({});
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({});
   // Per-user action error
-  const [actionError, setActionError] = useState({});
+  const [actionError, setActionError] = useState<Record<string, string>>({});
 
   // Get the logged-in admin's ID so we don't allow self-block
-  const adminUser =
+  const adminUser: AdminUser | null =
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem("adminUser") || "null")
       : null;
@@ -33,9 +34,10 @@ export default function UsersPage() {
     setError("");
     try {
       const data = await getUsers();
-      setUsers(Array.isArray(data) ? data : data.users || []);
-    } catch (err) {
-      setError(err.message || "Failed to load users.");
+      setUsers(Array.isArray(data) ? data : (data as { users: AdminUser[] }).users || []);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load users.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -45,7 +47,7 @@ export default function UsersPage() {
     fetchUsers();
   }, []);
 
-  async function handleBlock(userId) {
+  async function handleBlock(userId: string) {
     setActionLoading((prev) => ({ ...prev, [userId]: true }));
     setActionError((prev) => ({ ...prev, [userId]: "" }));
     try {
@@ -54,17 +56,18 @@ export default function UsersPage() {
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, isBlocked: true } : u))
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to block user.";
       setActionError((prev) => ({
         ...prev,
-        [userId]: err.message || "Failed to block user.",
+        [userId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [userId]: false }));
     }
   }
 
-  async function handleUnblock(userId) {
+  async function handleUnblock(userId: string) {
     setActionLoading((prev) => ({ ...prev, [userId]: true }));
     setActionError((prev) => ({ ...prev, [userId]: "" }));
     try {
@@ -72,17 +75,18 @@ export default function UsersPage() {
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, isBlocked: false } : u))
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to unblock user.";
       setActionError((prev) => ({
         ...prev,
-        [userId]: err.message || "Failed to unblock user.",
+        [userId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [userId]: false }));
     }
   }
 
-  function getRoleBadge(role) {
+  function getRoleBadge(role: string | undefined) {
     if (!role) return null;
     const isAdmin = role.toLowerCase() === "admin";
     return (

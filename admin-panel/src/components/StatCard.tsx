@@ -1,4 +1,14 @@
-export default function StatCard({ title, value, icon, gradient, subtitle }) {
+import React from "react";
+
+type StatCardProps = {
+  title: string;
+  value: string | number | undefined | null;
+  icon?: React.ReactNode;
+  gradient?: string;
+  subtitle?: string;
+};
+
+export default function StatCard({ title, value, icon, gradient, subtitle }: StatCardProps) {
   return (
     <div className="relative overflow-hidden rounded-2xl bg-slate-800 border border-slate-700 p-6 shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 group">
       {/* Background gradient orb */}

@@ -11,23 +11,27 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import type { Report, ReportStatus } from "@/types";
+
+type ReportActionType = "review" | "dismiss" | null;
 
 export default function ReportsPage() {
-  const [reports, setReports] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   // Track which report has an action running: { [reportId]: 'review' | 'dismiss' | null }
-  const [actionLoading, setActionLoading] = useState({});
-  const [actionError, setActionError] = useState({});
+  const [actionLoading, setActionLoading] = useState<Record<string, ReportActionType>>({});
+  const [actionError, setActionError] = useState<Record<string, string>>({});
 
   async function fetchReports() {
     setLoading(true);
     setError("");
     try {
       const data = await getReports();
-      setReports(Array.isArray(data) ? data : data.reports || []);
-    } catch (err) {
-      setError(err.message || "Failed to load reports.");
+      setReports(Array.isArray(data) ? data : (data as { reports: Report[] }).reports || []);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load reports.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -37,53 +41,55 @@ export default function ReportsPage() {
     fetchReports();
   }, []);
 
-  async function handleReview(reportId) {
+  async function handleReview(reportId: string) {
     setActionLoading((prev) => ({ ...prev, [reportId]: "review" }));
     setActionError((prev) => ({ ...prev, [reportId]: "" }));
     try {
       await reviewReport(reportId);
       setReports((prev) =>
         prev.map((r) =>
-          r._id === reportId ? { ...r, status: "reviewed" } : r
+          r._id === reportId ? { ...r, status: "reviewed" as ReportStatus } : r
         )
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to mark as reviewed.";
       setActionError((prev) => ({
         ...prev,
-        [reportId]: err.message || "Failed to mark as reviewed.",
+        [reportId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [reportId]: null }));
     }
   }
 
-  async function handleDismiss(reportId) {
+  async function handleDismiss(reportId: string) {
     setActionLoading((prev) => ({ ...prev, [reportId]: "dismiss" }));
     setActionError((prev) => ({ ...prev, [reportId]: "" }));
     try {
       await dismissReport(reportId);
       setReports((prev) =>
         prev.map((r) =>
-          r._id === reportId ? { ...r, status: "dismissed" } : r
+          r._id === reportId ? { ...r, status: "dismissed" as ReportStatus } : r
         )
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to dismiss report.";
       setActionError((prev) => ({
         ...prev,
-        [reportId]: err.message || "Failed to dismiss report.",
+        [reportId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [reportId]: null }));
     }
   }
 
-  function getStatusBadge(status) {
-    const styles = {
+  function getStatusBadge(status: ReportStatus | undefined) {
+    const styles: Record<string, string> = {
       pending: "bg-amber-500/15 text-amber-400 border-amber-500/30",
       reviewed: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
       dismissed: "bg-slate-700 text-slate-400 border-slate-600",
     };
-    const style = styles[status] || styles.pending;
+    const style = (status && styles[status]) || styles.pending;
     return (
       <span
         className={`px-2.5 py-0.5 rounded-full text-xs font-medium border capitalize ${style}`}

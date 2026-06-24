@@ -1,16 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+
+type ProtectedRouteProps = {
+  children: React.ReactNode;
+};
 
 /**
  * Wraps any page that requires a valid adminToken.
  * - If no token → redirect to /login
  * - If token exists → render children
  */
-export default function ProtectedRoute({ children }) {
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
 
   useEffect(() => {
     const token = localStorage.getItem("adminToken");
@@ -32,5 +36,5 @@ export default function ProtectedRoute({ children }) {
     );
   }
 
-  return children;
+  return <>{children}</>;
 }

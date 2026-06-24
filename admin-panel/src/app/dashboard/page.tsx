@@ -4,12 +4,13 @@ import { useEffect, useState } from "react";
 import { getDashboardStats } from "@/lib/api";
 import StatCard from "@/components/StatCard";
 import { Users, ShieldCheck, Ban, FileText, RefreshCw } from "lucide-react";
+import type { DashboardStats, AdminUser } from "@/types";
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [lastUpdated, setLastUpdated] = useState(null);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   async function fetchStats() {
     setLoading(true);
@@ -18,8 +19,9 @@ export default function DashboardPage() {
       const data = await getDashboardStats();
       setStats(data);
       setLastUpdated(new Date());
-    } catch (err) {
-      setError(err.message || "Failed to load dashboard data.");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load dashboard data.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -30,7 +32,7 @@ export default function DashboardPage() {
   }, []);
 
   // Get admin user info from localStorage
-  const adminUser =
+  const adminUser: AdminUser | null =
     typeof window !== "undefined"
       ? JSON.parse(localStorage.getItem("adminUser") || "null")
       : null;
@@ -38,28 +40,28 @@ export default function DashboardPage() {
   const statCards = [
     {
       title: "Total Users",
-      key: "totalUsers",
+      key: "totalUsers" as keyof DashboardStats,
       icon: <Users size={22} />,
       gradient: "bg-gradient-to-br from-sky-500 to-blue-600",
       subtitle: "Registered users",
     },
     {
       title: "Total Admins",
-      key: "totalAdmins",
+      key: "totalAdmins" as keyof DashboardStats,
       icon: <ShieldCheck size={22} />,
       gradient: "bg-gradient-to-br from-violet-500 to-indigo-600",
       subtitle: "Admin accounts",
     },
     {
       title: "Blocked Users",
-      key: "blockedUsers",
+      key: "blockedUsers" as keyof DashboardStats,
       icon: <Ban size={22} />,
       gradient: "bg-gradient-to-br from-rose-500 to-pink-600",
       subtitle: "Restricted accounts",
     },
     {
       title: "Total Posts",
-      key: "totalPosts",
+      key: "totalPosts" as keyof DashboardStats,
       icon: <FileText size={22} />,
       gradient: "bg-gradient-to-br from-emerald-500 to-teal-600",
       subtitle: "Published content",

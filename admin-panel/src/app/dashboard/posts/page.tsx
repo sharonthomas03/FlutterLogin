@@ -12,23 +12,27 @@ import {
   Trash2,
   EyeOffIcon,
 } from "lucide-react";
+import type { Post } from "@/types";
+
+type PostActionType = "delete" | "hide" | "unhide" | null;
 
 export default function PostsPage() {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
   // Track per-post action loading: { [postId]: 'delete' | 'hide' | 'unhide' | null }
-  const [actionLoading, setActionLoading] = useState({});
-  const [actionError, setActionError] = useState({});
+  const [actionLoading, setActionLoading] = useState<Record<string, PostActionType>>({});
+  const [actionError, setActionError] = useState<Record<string, string>>({});
 
   async function fetchPosts() {
     setLoading(true);
     setError("");
     try {
       const data = await getPosts();
-      setPosts(Array.isArray(data) ? data : data.posts || []);
-    } catch (err) {
-      setError(err.message || "Failed to load posts.");
+      setPosts(Array.isArray(data) ? data : (data as { posts: Post[] }).posts || []);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to load posts.";
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -38,7 +42,7 @@ export default function PostsPage() {
     fetchPosts();
   }, []);
 
-  async function handleDelete(postId) {
+  async function handleDelete(postId: string) {
     if (!confirm("Are you sure you want to permanently delete this post?")) return;
     setActionLoading((prev) => ({ ...prev, [postId]: "delete" }));
     setActionError((prev) => ({ ...prev, [postId]: "" }));
@@ -46,17 +50,18 @@ export default function PostsPage() {
       await deletePost(postId);
       // Remove from local state
       setPosts((prev) => prev.filter((p) => p._id !== postId));
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to delete post.";
       setActionError((prev) => ({
         ...prev,
-        [postId]: err.message || "Failed to delete post.",
+        [postId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [postId]: null }));
     }
   }
 
-  async function handleHide(postId) {
+  async function handleHide(postId: string) {
     setActionLoading((prev) => ({ ...prev, [postId]: "hide" }));
     setActionError((prev) => ({ ...prev, [postId]: "" }));
     try {
@@ -64,17 +69,18 @@ export default function PostsPage() {
       setPosts((prev) =>
         prev.map((p) => (p._id === postId ? { ...p, isHidden: true } : p))
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to hide post.";
       setActionError((prev) => ({
         ...prev,
-        [postId]: err.message || "Failed to hide post.",
+        [postId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [postId]: null }));
     }
   }
 
-  async function handleUnhide(postId) {
+  async function handleUnhide(postId: string) {
     setActionLoading((prev) => ({ ...prev, [postId]: "unhide" }));
     setActionError((prev) => ({ ...prev, [postId]: "" }));
     try {
@@ -82,10 +88,11 @@ export default function PostsPage() {
       setPosts((prev) =>
         prev.map((p) => (p._id === postId ? { ...p, isHidden: false } : p))
       );
-    } catch (err) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to unhide post.";
       setActionError((prev) => ({
         ...prev,
-        [postId]: err.message || "Failed to unhide post.",
+        [postId]: message,
       }));
     } finally {
       setActionLoading((prev) => ({ ...prev, [postId]: null }));

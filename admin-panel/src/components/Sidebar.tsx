@@ -10,8 +10,15 @@ import {
   LogOut,
   ShieldCheck,
 } from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
-const navItems = [
+type NavItem = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+};
+
+const navItems: NavItem[] = [
   {
     href: "/dashboard",
     label: "Dashboard",
