@@ -11,6 +11,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { LucideIcon } from "lucide-react";
+import { logout } from "@/lib/api";
 
 type NavItem = {
   href: string;
@@ -45,9 +46,8 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
-  function handleLogout() {
-    localStorage.removeItem("adminToken");
-    localStorage.removeItem("adminUser");
+  async function handleLogout() {
+    await logout(); // Invalidates refresh token in DB + clears localStorage
     router.push("/login");
   }
 

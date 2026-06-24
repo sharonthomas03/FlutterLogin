@@ -58,7 +58,8 @@ export type DashboardStats = {
 // ─── API Response Types ──────────────────────────────────────────────────────
 
 export type LoginResponse = {
-  token: string;
+  accessToken: string;
+  refreshToken: string;
   user: AdminUser;
 };
 

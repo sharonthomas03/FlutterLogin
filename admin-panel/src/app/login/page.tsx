@@ -31,8 +31,11 @@ export default function LoginPage() {
         return;
       }
 
-      localStorage.setItem("adminToken", data.token);
+      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem("refreshToken", data.refreshToken);
       localStorage.setItem("adminUser", JSON.stringify(data.user));
+      // Remove legacy key from old sessions
+      localStorage.removeItem("adminToken");
       router.push("/dashboard");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Login failed. Please try again.";

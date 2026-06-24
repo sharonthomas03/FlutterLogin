@@ -8,17 +8,24 @@ type ProtectedRouteProps = {
 };
 
 /**
- * Wraps any page that requires a valid adminToken.
- * - If no token → redirect to /login
- * - If token exists → render children
+ * Wraps any page that requires a valid auth session.
+ * - If neither accessToken nor refreshToken exists → redirect to /login.
+ * - If tokens exist → render children.
+ *   (If accessToken is expired but refreshToken is still valid, authApiCall
+ *    will transparently refresh it when the first API call fires.)
  */
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState<boolean>(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("adminToken");
-    if (!token) {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = localStorage.getItem("refreshToken");
+
+    // If neither token exists, the session is fully expired — go to login.
+    // If at least one token is present, let the API layer decide whether
+    // to silently refresh or redirect when the first authenticated call fires.
+    if (!accessToken && !refreshToken) {
       router.replace("/login");
     } else {
       setIsAuthorized(true);

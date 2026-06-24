@@ -6,6 +6,54 @@ type FetchOptions = RequestInit & {
   headers?: Record<string, string>;
 };
 
+// ─── Token Helpers ────────────────────────────────────────────────────────────
+
+function getAccessToken(): string | null {
+  return typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+}
+
+function getRefreshToken(): string | null {
+  return typeof window !== "undefined" ? localStorage.getItem("refreshToken") : null;
+}
+
+function clearTokens(): void {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("refreshToken");
+  // Also remove legacy key if it exists from old sessions
+  localStorage.removeItem("adminToken");
+  localStorage.removeItem("adminUser");
+}
+
+/**
+ * Attempt to refresh the access token using the stored refresh token.
+ * Returns the new access token on success, or null on failure.
+ */
+async function refreshAccessToken(): Promise<string | null> {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
+
+  try {
+    const response = await fetch(`${BASE_URL}/api/auth/refresh-token`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    if (data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      return data.accessToken;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+// ─── Core API Helpers ─────────────────────────────────────────────────────────
+
 /**
  * Make a public API call (no auth header).
  */
@@ -29,13 +77,21 @@ export async function apiCall<T = unknown>(endpoint: string, options: FetchOptio
 }
 
 /**
- * Make an authenticated API call using the adminToken from localStorage.
+ * Make an authenticated API call using the accessToken from localStorage.
+ *
+ * If the server returns 401 (access token expired/invalid):
+ *   1. Attempt to refresh using the stored refresh token.
+ *   2. If refresh succeeds, retry the original request once with the new access token.
+ *   3. If refresh fails, clear all tokens and redirect to /login.
+ *
+ * NOTE (Security): For production, prefer storing the refresh token in an
+ * httpOnly secure cookie and the access token in memory/localStorage.
  */
 export async function authApiCall<T = unknown>(endpoint: string, options: FetchOptions = {}): Promise<T> {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("adminToken") : null;
-
+  const token = getAccessToken();
   const url = `${BASE_URL}${endpoint}`;
+
+  // ── First attempt ──────────────────────────────────────────────────────────
   const response = await fetch(url, {
     headers: {
       "Content-Type": "application/json",
@@ -45,14 +101,46 @@ export async function authApiCall<T = unknown>(endpoint: string, options: FetchO
     ...options,
   });
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.message || "Something went wrong");
+  // ── Handle non-401 errors immediately ──────────────────────────────────────
+  if (response.status !== 401) {
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || "Something went wrong");
+    }
+    return data as T;
   }
 
-  return data as T;
+  // ── 401 → try to refresh ───────────────────────────────────────────────────
+  const newAccessToken = await refreshAccessToken();
+
+  if (!newAccessToken) {
+    // Refresh failed — clear tokens and redirect to login
+    clearTokens();
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+    throw new Error("Session expired. Please log in again.");
+  }
+
+  // ── Retry original request once with the new access token ──────────────────
+  const retryResponse = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${newAccessToken}`,
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
+
+  const retryData = await retryResponse.json();
+  if (!retryResponse.ok) {
+    throw new Error(retryData.message || "Something went wrong");
+  }
+
+  return retryData as T;
 }
+
+// ─── Auth API ─────────────────────────────────────────────────────────────────
 
 /**
  * Login — POST /api/auth/login
@@ -63,6 +151,27 @@ export async function login(email: string, password: string): Promise<LoginRespo
     body: JSON.stringify({ email, password }),
   });
 }
+
+/**
+ * Logout — POST /api/auth/logout
+ * Clears the refresh token from the DB, then wipes localStorage.
+ */
+export async function logout(): Promise<void> {
+  const refreshToken = getRefreshToken();
+  try {
+    await fetch(`${BASE_URL}/api/auth/logout`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refreshToken }),
+    });
+  } catch {
+    // Best-effort — always clear local tokens even if the request fails
+  } finally {
+    clearTokens();
+  }
+}
+
+// ─── Admin Stats ──────────────────────────────────────────────────────────────
 
 /**
  * Get dashboard stats — GET /api/admin/dashboard
